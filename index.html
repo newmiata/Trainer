@@ -60,6 +60,9 @@ select{font:inherit;width:100%;padding:10px;border-radius:10px;border:1px solid 
 .grbtn{width:min(420px,100%);padding:14px 10px;font-size:16px;border-radius:14px;border:none;background:#6b6b70;color:#fff}
 .acc{background:var(--ac);color:var(--acx);border-color:var(--ac)}
 .exr.s{min-height:0;padding:20px 0 10px}.mis{margin-top:14px;text-align:left}.mis h3{text-align:center;margin:0 0 6px}.rev{border-top:1px solid var(--bd);padding:10px 0;font-size:14px}
+.cd{width:min(420px,100%);text-align:center;font-size:17px;font-weight:600;margin:0 0 18px;display:none}
+.sq{font:inherit;width:100%;padding:12px;border-radius:12px;border:1px solid var(--bd);background:var(--card);color:var(--tx);font-size:16px;margin-bottom:4px}
+mark{background:#ffe066;color:#000;border-radius:3px;padding:0 1px}
 </style></head><body>
 <button id="bk" class="back" style="display:none">← Назад</button>
 <button id="pf" class="pfb" aria-label="Профіль"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/></svg></button>
@@ -69,7 +72,7 @@ select{font:inherit;width:100%;padding:10px;border-radius:10px;border:1px solid 
 <div class="stat"><div class="sv" id="s2">—</div><div>Успішно складених модулів</div><small id="s2s"></small></div></div></div>
 <div id="exam" style="display:none"><div class="exw" id="exm2"></div></div>
 <div id="home" class="scr"><div class="top"><h2>Привіт, яке право будеш вчити сьогодні?</h2></div><div class="bot"><div class="btns"><button class="big" data-b="civil">Цивільне право</button><button class="big" data-b="criminal">Кримінальне право</button><button class="big" data-b="labor">Трудове право</button><button class="big" data-b="admin">Адміністративне право</button><button class="big" data-b="const">Конституційне право</button></div></div></div>
-<div id="branch" class="scr" style="display:none"><div class="mid"><div class="btns" id="bb"></div><div id="soon" class="soon"></div></div></div>
+<div id="branch" class="scr" style="display:none"><div class="mid"><div id="cd" class="cd"></div><div class="btns" id="bb"></div><div id="soon" class="soon"></div></div></div>
 <div id="cf" class="cf" style="display:none"><div class="cfb"><p>Ви впевнені?</p><div class="row"><button id="cfn">Ні</button><button id="cfy" class="p">Так</button></div></div></div>
 <div id="appv" style="display:none"><div class="w">
 <h1>Модуль · Цивільне право України (ч. 1)</h1>
@@ -99,7 +102,17 @@ $("#tg").onclick=()=>{nm=!nm;try{localStorage.setItem("kn",nm?"1":"0")}catch(e){
 function chips(){const c=$("#tp");c.innerHTML="";[[0],[1,2,3],[4,5]].forEach(r=>{const d=document.createElement("div");d.className="crow";r.forEach(n=>{const b=document.createElement("button");const on=n?sel.has(n):!sel.size;b.className="chip"+(on?" on":"");b.textContent=n?TP[n][0]+" ("+(TP[n][2]-TP[n][1]+1)+")":"Усі теми";b.onclick=n?()=>{sel.has(n)?sel.delete(n):sel.add(n);start()}:()=>{sel.clear();start()};d.append(b)});c.append(d)})}
 function updRs(){const r=$("#rs");if(r)r.style.display=(mode===0&&nm)?"block":"none"}
 function start(){chips();updRs();["#t1","#t2","#t3"].forEach((x,n)=>$(x).className=mode===n?"on":"");mode===0?cards(true):mode===1?menu():notes()}
-function notes(){const ix=sel.size?[...sel].sort():[1,2,3,4,5];app.innerHTML=ix.map(n=>'<div class="full"><h3>'+TP[n][0]+'</h3><ul>'+M[n].map(x=>'<li>'+x+'</li>').join("")+'</ul></div>').join("")}
+function notes(){const ix=sel.size?[...sel].sort():[1,2,3,4,5];
+ app.innerHTML='<input id="sq" class="sq" type="search" placeholder="Пошук по конспекту (ключові слова)" autocomplete="off"><div id="sr"></div>';
+ const nz=t=>t.replace(/[ʼ'`]/g,"’").toLowerCase();
+ const draw=()=>{const ws=$("#sq").value.trim().split(/\s+/).filter(Boolean);
+  const rx=ws.length?new RegExp("("+ws.map(w=>w.replace(/[.*+?^${}()|[\]\\]/g,"\\$&").replace(/[ʼ'`’]/g,"[ʼ'`’]")).join("|")+")","gi"):null;
+  let h="";
+  ix.forEach(n=>{const li=M[n].filter(x=>{if(!ws.length)return true;const t=nz(x.replace(/<[^>]+>/g,""));return ws.every(w=>t.includes(nz(w)))});
+   if(!li.length)return;
+   h+='<div class="full"><h3>'+TP[n][0]+'</h3><ul>'+li.map(x=>'<li>'+(rx?x.replace(/(<[^>]+>)|([^<]+)/g,(m,tag,txt)=>tag?tag:txt.replace(rx,"<mark>$1</mark>")):x)+'</li>').join("")+'</ul></div>'});
+  $("#sr").innerHTML=h||'<p class="info">Нічого не знайдено</p>'};
+ $("#sq").oninput=draw;draw()}
 function cards(reset){if(reset){let p=pool().filter(d=>K[d.id]!==1);if(hard)p=p.filter(d=>K[d.id]===0);deck=shuf(p);i=0;flip=false}
  if(!deck.length){app.innerHTML='<p class="info">Усі картки в цьому виборі вже вивчено. Щоб почати заново, зітріть результат.</p><div class="row"><button id="all" class="rs">Стерти результат</button></div>';$("#all").onclick=()=>{$("#cf").style.display="flex"};return}
  const d=deck[i],kn=Object.values(K).filter(v=>v===1).length;
@@ -131,11 +144,19 @@ $("#cfy").onclick=()=>{K={};sv();$("#cf").style.display="none";if(mode===0)cards
 new MutationObserver(layout).observe(app,{childList:true});addEventListener("resize",layout);
 const BR={civil:["Цивільне право",["Модуль","Іспит"]],criminal:["Кримінальне право",["Модуль","Іспит"]],labor:["Трудове право",["Модуль","Іспит"]],admin:["Адміністративне право",["Модуль","Іспит"]],const:["Конституційне право",["Іспит"]]};
 let view="home",br="",st=0;
-function soon(){const s=$("#soon");s.textContent="Скоро буде добавлено";s.classList.add("on");clearTimeout(st);st=setTimeout(()=>s.classList.remove("on"),2500)}
+function soon(m,ms){const s=$("#soon");s.textContent=m||"Скоро буде добавлено";s.classList.add("on");clearTimeout(st);st=setTimeout(()=>s.classList.remove("on"),ms||2500)}
+const CD={civil:["цивільного права",new Date(2026,10,5,11,50)],admin:["Адміністративного права",new Date(2026,10,4,10,10)],criminal:["кримінального",new Date(2026,10,17,10,10)],labor:["трудового права",new Date(2026,10,19,8,30)]};
+let cdT=0;
+const pl=(n,f)=>{const a=n%100,b=n%10;return n+" "+(a>10&&a<20?f[2]:b===1?f[0]:b>1&&b<5?f[1]:f[2])};
+function cdTick(){const e=$("#cd"),c=CD[br];if(!c){e.style.display="none";return}e.style.display="block";
+ let m=Math.floor((c[1]-Date.now())/60000);
+ if(m<0){e.textContent="Час модуля з "+c[0]+" настав";return}
+ const d=Math.floor(m/1440),h=Math.floor(m%1440/60),mi=m%60;
+ e.textContent="До модуля з "+c[0]+" лишилось "+pl(d,["день","дні","днів"])+" "+pl(h,["година","години","годин"])+" "+pl(mi,["хвилина","хвилини","хвилин"])}
 const PREV={app:"branch",branch:"home",profile:"home",exam:"app"};
 let exT=0,ex=null;
 function go(v,b,push){view=v;if(b)br=b;
- if(v!=="exam")clearInterval(exT);
+ if(v!=="exam")clearInterval(exT);clearInterval(cdT);
  $("#home").style.display=v==="home"?"flex":"none";
  $("#branch").style.display=v==="branch"?"flex":"none";
  $("#appv").style.display=v==="app"?"block":"none";
@@ -143,7 +164,7 @@ function go(v,b,push){view=v;if(b)br=b;
  $("#exam").style.display=v==="exam"?"block":"none";
  $("#bk").style.display=v==="home"?"none":"block";
  $("#pf").style.display=(v==="profile"||v==="exam")?"none":"flex";
- if(v==="branch"){const bb=$("#bb");bb.innerHTML="";$("#soon").classList.remove("on");BR[br][1].forEach(t=>{const x=document.createElement("button");x.className="big";x.textContent=t;x.onclick=()=>{if(br==="civil"&&t==="Модуль")go("app","",true);else soon()};bb.append(x)})}
+ if(v==="branch"){const bb=$("#bb");bb.innerHTML="";$("#soon").classList.remove("on");BR[br][1].forEach(t=>{const x=document.createElement("button");x.className="big";x.textContent=t;x.onclick=()=>{if(br==="civil"&&t==="Модуль")go("app","",true);else if(br==="admin"&&t==="Модуль")soon("Додавання інформації поки що в процесі, приблизний час появи: ранок 3 листопада",4500);else soon()};bb.append(x)});cdTick();cdT=setInterval(cdTick,1000)}
  if(push)history.pushState({v,b:br},"");
  scrollTo(0,0);
  if(v==="app"){start();layout()}
