@@ -73,8 +73,8 @@ function chips(){const c=$("#tp");c.innerHTML="";[[0],[1,2,3],[4,5]].forEach(r=>
 function updRs(){const r=$("#rs");if(r)r.style.display=(mode===0&&nm)?"block":"none"}
 function start(){chips();updRs();["#t1","#t2","#t3"].forEach((x,n)=>$(x).className=mode===n?"on":"");mode===0?cards(true):mode===1?menu():notes()}
 function notes(){const ix=sel.size?[...sel].sort():[1,2,3,4,5];app.innerHTML=ix.map(n=>'<div class="full"><h3>'+TP[n][0]+'</h3><ul>'+M[n].map(x=>'<li>'+x+'</li>').join("")+'</ul></div>').join("")}
-function cards(reset){if(reset){let p=pool();if(hard)p=p.filter(d=>K[d.id]===0);deck=shuf(p);i=0;flip=false}
- if(!deck.length){app.innerHTML='<p class="info">Немає карток для цього вибору.</p><div class="row"><button id="all">Показати всі</button></div>';$("#all").onclick=()=>{hard=false;cards(true)};return}
+function cards(reset){if(reset){let p=pool().filter(d=>K[d.id]!==1);if(hard)p=p.filter(d=>K[d.id]===0);deck=shuf(p);i=0;flip=false}
+ if(!deck.length){app.innerHTML='<p class="info">Усі картки в цьому виборі вже вивчено. Щоб почати заново, зітріть результат.</p><div class="row"><button id="all" class="rs">Стерти результат</button></div>';$("#all").onclick=()=>{$("#cf").style.display="flex"};return}
  const d=deck[i],kn=Object.values(K).filter(v=>v===1).length;
  app.innerHTML='<div class="info">'+(i+1)+' / '+deck.length+' · вивчено '+kn+' з 242</div><div class="bar"><i style="width:'+((i+1)/deck.length*100)+'%"></i></div><div class="card" id="c"><small>'+(flip?"Відповідь":"Питання №"+d.id)+' · торкніться, щоб перевернути</small><div class="a">'+esc(flip?d.a:d.q)+'</div></div><div class="row"><button id="no">Не знаю</button><button id="ok" class="p">Знаю</button></div><div class="row"><button id="pv">← Попередня</button><button id="sh">Перемішати</button></div>';
  $("#c").onclick=()=>{flip=!flip;cards()};
@@ -88,7 +88,7 @@ function quiz(n){const p=pool();let qs=shuf(p).slice(0,Math.min(n,p.length)),q=0
  const show=()=>{const d=qs[q];let cs=short(d.a),op;
   if(d.o){cs=d.o[0];op=shuf(d.o)}else{const ds=[];for(const x of shuf(p)){if(ds.length>=3)break;const s=short(x.a);if(x.id===d.id||s===cs||ds.includes(s)||x.q.slice(0,25)===d.q.slice(0,25))continue;ds.push(s)}op=shuf([cs,...ds])}
   app.innerHTML='<div class="info">'+(q+1)+' / '+qs.length+' · правильних: '+sc+'</div><div class="bar"><i style="width:'+(q/qs.length*100)+'%"></i></div><p><b>'+esc(d.q)+'</b></p><div id="o"></div><div id="f"></div>';
-  op.forEach(t=>{const b=document.createElement("button");b.className="opt";b.textContent=t;b.onclick=()=>{const r=t===cs;if(r){sc++;K[d.id]=1}else{miss.push(d);K[d.id]=0}sv();
+  op.forEach(t=>{const b=document.createElement("button");b.className="opt";b.textContent=t;b.onclick=()=>{const r=t===cs;if(r){sc++}else{miss.push(d)}
    document.querySelectorAll(".opt").forEach(x=>{x.disabled=true;if(x.textContent===cs)x.classList.add("ok")});if(!r)b.classList.add("no");
    $("#f").innerHTML='<div class="full">'+esc(d.a)+'</div><div class="row"><button class="p" id="nx">'+(q<qs.length-1?"Далі":"Результат")+'</button></div>';
    $("#nx").onclick=()=>{q++;q<qs.length?show():end()}};$("#o").append(b)})};
@@ -100,7 +100,7 @@ function layout(){const a=$("#app"),n=document.querySelector(".nav"),w=document.
  else{a.style.display="";a.style.flexDirection="";a.style.justifyContent="";a.style.minHeight=""}}
 $("#rs").onclick=()=>{$("#cf").style.display="flex"};
 $("#cfn").onclick=()=>{$("#cf").style.display="none"};
-$("#cfy").onclick=()=>{K={};sv();$("#cf").style.display="none";if(mode===0)cards()};
+$("#cfy").onclick=()=>{K={};sv();$("#cf").style.display="none";if(mode===0)cards(true)};
 new MutationObserver(layout).observe(app,{childList:true});addEventListener("resize",layout);
 const BR={civil:["Цивільне право",["Модуль","Іспит"]],criminal:["Кримінальне право",["Модуль","Іспит"]],labor:["Трудове право",["Модуль","Іспит"]],admin:["Адміністративне право",["Модуль","Іспит"]],const:["Конституційне право",["Іспит"]]};
 let view="home",br="",st=0;
