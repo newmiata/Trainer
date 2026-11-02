@@ -59,7 +59,7 @@ select{font:inherit;width:100%;padding:10px;border-radius:10px;border:1px solid 
 .gbtn{width:min(420px,100%);padding:20px 10px;font-size:24px;font-weight:800;border-radius:18px;border:none;background:#2e9e44;color:#fff}
 .grbtn{width:min(420px,100%);padding:14px 10px;font-size:16px;border-radius:14px;border:none;background:#6b6b70;color:#fff}
 .acc{background:var(--ac);color:var(--acx);border-color:var(--ac)}
-.rev{border-top:1px solid var(--bd);padding:10px 0;font-size:14px}
+.exr.s{min-height:0;padding:20px 0 10px}.mis{margin-top:14px;text-align:left}.mis h3{text-align:center;margin:0 0 6px}.rev{border-top:1px solid var(--bd);padding:10px 0;font-size:14px}
 </style></head><body>
 <button id="bk" class="back" style="display:none">← Назад</button>
 <button id="pf" class="pfb" aria-label="Профіль"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/></svg></button>
@@ -164,20 +164,20 @@ $("#ps").onclick=()=>{const v=$("#pn").value.trim(),m=$("#pm");
  PF.name=v;spf();m.textContent="Збережено";m.className="pm gd"};
 
 const fmt=s=>String(Math.floor(s/60)).padStart(2,"0")+":"+String(s%60).padStart(2,"0");
-function startExam(){clearInterval(exT);ex={qs:shuf(D).slice(0,20),i:0,ok:0,err:0,left:900,fin:false};exRender();
+function startExam(){clearInterval(exT);ex={qs:shuf(D).slice(0,20),i:0,ok:0,err:0,left:900,fin:false,wrong:[],lock:false};exRender();
  exT=setInterval(()=>{if(!ex||ex.fin)return;ex.left--;const t=$("#ext");if(t){t.textContent=fmt(Math.max(0,ex.left));t.style.color=ex.left<60?"var(--no)":""}if(ex.left<=0)exFinish("time")},1000)}
 function exRender(){const d=ex.qs[ex.i],cs=d.o[0],op=shuf(d.o);
- $("#exm2").innerHTML='<div class="exh"><span>⏱ <b id="ext">'+fmt(ex.left)+'</b></span><span>Питання '+(ex.i+1)+'/20</span><span>Помилки '+ex.err+'/5</span><span>Бали '+ex.ok*1.25+'</span></div><div class="bar"><i style="width:'+ex.i/20*100+'%"></i></div><p><b>'+esc(d.q)+'</b></p><div id="exo"></div><div id="exf"></div>';
- op.forEach(t=>{const b=document.createElement("button");b.className="opt";b.textContent=t;b.onclick=()=>{if(ex.fin||b.dataset.d)return;const r=t===cs;if(r)ex.ok++;else ex.err++;
-  document.querySelectorAll("#exo .opt").forEach(x=>{x.dataset.d=1;x.disabled=true;if(x.textContent===cs)x.classList.add("ok")});if(!r)b.classList.add("no");
-  if(ex.err>=5){setTimeout(()=>exFinish("err"),1100);return}
-  $("#exf").innerHTML='<div class="full">'+esc(d.a)+'</div><div class="row"><button class="p" id="exn">'+(ex.i<19?"Далі":"Результат")+'</button></div>';
-  $("#exn").onclick=()=>{if(ex.i<19){ex.i++;exRender()}else exFinish("done")}};$("#exo").append(b)})}
+ $("#exm2").innerHTML='<div class="exh"><span>⏱ <b id="ext">'+fmt(ex.left)+'</b></span><span>Питання '+(ex.i+1)+'/20</span></div><div class="bar"><i style="width:'+ex.i/20*100+'%"></i></div><p><b>'+esc(d.q)+'</b></p><div id="exo"></div>';
+ op.forEach(t=>{const b=document.createElement("button");b.className="opt";b.textContent=t;b.onclick=()=>{if(ex.fin||ex.lock)return;ex.lock=true;b.style.borderColor="var(--ac)";
+  if(t===cs)ex.ok++;else{ex.err++;ex.wrong.push({d:d,c:t})}
+  setTimeout(()=>{ex.lock=false;if(ex.fin)return;if(ex.err>=5)exFinish("err");else if(ex.i<19){ex.i++;exRender()}else exFinish("done")},250)};$("#exo").append(b)})}
 function exFinish(why){if(!ex||ex.fin)return;ex.fin=true;clearInterval(exT);
  const sc=ex.ok*1.25,pass=why==="err"?false:sc>=15;
  if(pass)PF.pass++;else PF.fail++;spf();
  const r=why==="err"?"Допущено 5 помилок. ":why==="time"?"Час вийшов. ":"";
- $("#exm2").innerHTML='<div class="exr">'+(pass?'<div class="okc">Ви успішно склали модуль!</div>':'<div class="fail">Ви провалили модуль</div>')+'<div class="exs">'+r+'Бали: '+sc+' з 25 (для складання потрібно щонайменше 15). Помилок: '+ex.err+'</div><button class="gbtn" id="exr">Попробувати ще раз</button><button class="grbtn" id="exb">Повернутися до повторення матеріалу</button></div>';
+ let mis="";
+ if(pass){mis=ex.wrong.length?'<div class="mis"><h3>Ваші помилки ('+ex.wrong.length+')</h3>'+ex.wrong.map(w=>'<div class="rev"><b>'+esc(w.d.q)+'</b><br>Ваша відповідь: '+esc(w.c)+'<br>Правильно: '+esc(w.d.o[0])+'<br><small>'+esc(w.d.a)+'</small></div>').join("")+'</div>':'<div class="mis"><h3>Помилок немає</h3></div>'}
+ $("#exm2").innerHTML='<div class="exr'+(mis?' s':'')+'">'+(pass?'<div class="okc">Ви успішно склали модуль!</div>':'<div class="fail">Ви провалили модуль</div>')+'<div class="exs">'+r+'Бали: '+sc+' з 25 (для складання потрібно щонайменше 15). Помилок: '+ex.err+'</div><button class="gbtn" id="exr">Попробувати ще раз</button><button class="grbtn" id="exb">Повернутися до повторення матеріалу</button></div>'+mis;
  $("#exr").onclick=startExam;$("#exb").onclick=()=>{mode=2;go("app","",true)}}
 if("serviceWorker" in navigator){window.addEventListener("load",()=>{navigator.serviceWorker.register("sw.js").catch(()=>{})})}
 </script></body></html>
